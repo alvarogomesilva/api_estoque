@@ -1,0 +1,125 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Produto {
+  id_produto     Int            @id @default(autoincrement())
+  nome           String
+  descricao      String?
+  preco_unitario Decimal        @db.Decimal(10, 2)
+  quantidade     Int
+  unidade_medida String
+  id_categoria   Int
+  categoria      Categoria      @relation(fields: [id_categoria], references: [id])
+  movimentacoes  Movimentacao[]
+  itensVenda     ItemVenda[]
+
+  data_cadastro    DateTime @default(now())
+  data_atualizacao DateTime @default(now())
+
+  @@map("produtos")
+}
+
+model Categoria {
+  id        Int       @id @default(autoincrement())
+  nome      String
+  descricao String?
+  produtos  Produto[]
+
+  data_cadastro    DateTime @default(now())
+  data_atualizacao DateTime @default(now())
+
+  @@map("categorias")
+}
+
+model Fornecedor {
+  id_fornecedor Int            @id @default(autoincrement())
+  nome          String
+  telefone      String?
+  email         String?
+  endereco      String?
+  cnpj          String
+  movimentacoes Movimentacao[]
+
+  data_cadastro    DateTime @default(now())
+  data_atualizacao DateTime @default(now())
+
+  @@map("fornecedores")
+}
+
+model Movimentacao {
+  id_movimentacao String      @id @default(uuid())
+  tipo            String // 'entrada' ou 'saida'
+  descricao       String
+  quantidade      Int
+  id_produto      Int
+  id_fornecedor   Int?
+  produto         Produto     @relation(fields: [id_produto], references: [id_produto])
+  fornecedor      Fornecedor? @relation(fields: [id_fornecedor], references: [id_fornecedor])
+
+  data_movimentacao DateTime @default(now())
+
+  @@map("movimentacoes")
+}
+
+model Venda {
+  id_venda   Int         @id @default(autoincrement())
+  id_cliente Int
+  total      Decimal     @db.Decimal(10, 2)
+  status     String // 'pago', 'pendente', etc.
+  cliente    Cliente     @relation(fields: [id_cliente], references: [id_cliente])
+  itensVenda ItemVenda[]
+
+  data_venda DateTime @default(now())
+
+  @@map("vendas")
+}
+
+model ItemVenda {
+  id_item_venda  Int     @id @default(autoincrement())
+  quantidade     Int
+  preco_unitario Decimal @db.Decimal(10, 2)
+  id_venda       Int
+  id_produto     Int
+  produto        Produto @relation(fields: [id_produto], references: [id_produto])
+  venda          Venda   @relation(fields: [id_venda], references: [id_venda])
+
+  @@map("itens_vendas")
+}
+
+model Cliente {
+  id_cliente Int     @id @default(autoincrement())
+  nome       String
+  email      String  @unique
+  telefone   String?
+  endereco   String?
+  vendas     Venda[]
+
+  data_cadastro    DateTime @default(now())
+  data_atualizacao DateTime @default(now())
+
+  @@map("clientes")
+}
+
+model Usuario {
+  id_usuario Int    @id @default(autoincrement())
+  nome       String
+  email      String @unique
+  senha      String
+
+  data_cadastro    DateTime @default(now())
+  data_atualizacao DateTime @default(now())
+
+  @@map("usuarios")
+}
